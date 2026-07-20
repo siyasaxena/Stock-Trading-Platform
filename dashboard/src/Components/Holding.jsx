@@ -10,6 +10,20 @@ const Holdings = () => {
       setAllHoldings(res.data);
     });
   }, []);
+
+  // Calculate Summary Totals Dynamically
+  const totalInvestment = allHoldings.reduce(
+    (acc, stock) => acc + stock.avg * stock.qty,
+    0,
+  );
+  const currentValue = allHoldings.reduce(
+    (acc, stock) => acc + stock.price * stock.qty,
+    0,
+  );
+  const totalPnL = currentValue - totalInvestment;
+  const pnlPercent =
+    totalInvestment > 0 ? (totalPnL / totalInvestment) * 100 : 0;
+
   return (
     <>
       <h3 className="title">Holdings {allHoldings.length}</h3>
@@ -51,21 +65,20 @@ const Holdings = () => {
         </table>
       </div>
 
+      {/* Dynamic Summary Footer */}
       <div className="row">
         <div className="col">
-          <h5>
-            29,875.<span>55</span>{" "}
-          </h5>
+          <h5>{totalInvestment.toFixed(2)}</h5>
           <p>Total investment</p>
         </div>
         <div className="col">
-          <h5>
-            31,428.<span>95</span>{" "}
-          </h5>
+          <h5>{currentValue.toFixed(2)}</h5>
           <p>Current value</p>
         </div>
         <div className="col">
-          <h5>1,553.40 (+5.20%)</h5>
+          <h5 className={totalPnL >= 0 ? "profit" : "loss"}>
+            {totalPnL.toFixed(2)} ({pnlPercent.toFixed(2)}%)
+          </h5>
           <p>P&L</p>
         </div>
       </div>
