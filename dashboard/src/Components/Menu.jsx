@@ -1,14 +1,34 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 
 const Menu = () => {
   const [selectedMenu, setSelectedmenu] = useState(0);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [username, setUsername] = useState("USERID");
+
+  useEffect(() => {
+    // Read the username stored during signup/login
+    const savedUser = localStorage.getItem("username");
+    if (savedUser) {
+      setUsername(savedUser);
+    }
+  }, []);
+
+  // Helper to extract initials (e.g. "siya saxena" -> "SS")
+  const getInitials = (name) => {
+    if (!name || name === "USERID") return "ZU";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   const handleMenuClick = (index) => {
     setSelectedmenu(index);
   };
-  const handleProfileClick = (index) => {
+  const handleProfileClick = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 

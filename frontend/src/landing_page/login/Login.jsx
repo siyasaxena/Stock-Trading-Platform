@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-function Signup() {
+function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
@@ -52,8 +52,7 @@ function Signup() {
   return (
     <div className="container p-5 mb-5" style={{ maxWidth: "450px" }}>
       <div className="text-center mb-4">
-        <h2>Open a trading account</h2>
-        <p className="text-muted">Sign up to get started with trading</p>
+        <h2>Login Portal</h2>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -73,18 +72,6 @@ function Signup() {
         </div>
 
         <div className="mb-3">
-          <label className="form-label">Email Address</label>
-          <input
-            type="email"
-            className="form-control"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
           <label className="form-label">Password</label>
           <input
             type="password"
@@ -97,18 +84,11 @@ function Signup() {
         </div>
 
         <button type="submit" className="btn btn-primary w-100 py-2 mt-2">
-          Sign Up
+          Login
         </button>
       </form>
-
-      <div className="text-center mt-3">
-        <small className="text-muted">
-          Already have an account?{" "}
-          <Link to="../login/Login.jsx">Log in here</Link>
-        </small>
-      </div>
     </div>
   );
 }
 
-export default Signup;
+export default Login;
