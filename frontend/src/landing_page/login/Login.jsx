@@ -1,11 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
   });
@@ -24,27 +21,34 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/auth/register",
+        "http://localhost:8080/api/auth/login",
         formData,
+        { withCredentials: true },
       );
 
-      const username = response.data.user?.username || formData.username;
-      localStorage.setItem("username", username);
+      const username =
+        response.data.user?.username ||
+        response.data.username ||
+        formData.email.split("@")[0];
+      const email = response.data.user?.email || formData.email;
 
-      setSuccess("Account created successfully! Redirecting...");
+      localStorage.setItem("username", username);
+      localStorage.setItem("email", email);
+
+      // Save token if your register endpoint returns one
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
+
+      setSuccess("Logged in successfully! Redirecting...");
 
       // Redirect user to dashboard after 1.5 seconds
       setTimeout(() => {
-        // Save token if your register endpoint returns one
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
-        }
-
-        window.location.href = "http://localhost:5174";
+        window.location.href = `http://localhost:5174?username=${encodeURIComponent(username)}`;
       }, 1500);
     } catch (e) {
       setError(
-        e.response?.data?.message || "Failed to register. Please try again.",
+        e.response?.data?.message || "Invalid credentials. Please try again.",
       );
     }
   };
@@ -60,12 +64,12 @@ function Login() {
 
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
-          <label className="form-label">Username</label>
+          <label className="form-label">Email</label>
           <input
-            type="text"
+            type="email"
             className="form-control"
-            name="username"
-            value={formData.username}
+            name="email"
+            value={formData.email}
             onChange={handleChange}
             required
           />

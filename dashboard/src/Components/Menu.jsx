@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useEffect } from "react";
 
 const Menu = () => {
   const [selectedMenu, setSelectedmenu] = useState(0);
@@ -8,14 +7,24 @@ const Menu = () => {
   const [username, setUsername] = useState("USERID");
 
   useEffect(() => {
-    // Read the username stored during signup/login
-    const savedUser = localStorage.getItem("username");
-    if (savedUser) {
-      setUsername(savedUser);
+    // 1. Read ?username=siya%20saxena directly from URL search params
+    const queryParams = new URLSearchParams(window.location.search);
+    const userFromUrl = queryParams.get("username");
+
+    if (userFromUrl) {
+      setUsername(userFromUrl);
+      // Save it locally on port 5174 so it persists on page refreshes
+      localStorage.setItem("username", userFromUrl);
+    } else {
+      // 2. Fallback to port 5174's local storage on refresh
+      const savedUser = localStorage.getItem("username");
+      if (savedUser) {
+        setUsername(savedUser);
+      }
     }
   }, []);
 
-  // Helper to extract initials (e.g. "siya saxena" -> "SS")
+  // Extract initials (e.g., "siya saxena" -> "SS")
   const getInitials = (name) => {
     if (!name || name === "USERID") return "ZU";
     const parts = name.trim().split(" ");
@@ -28,6 +37,7 @@ const Menu = () => {
   const handleMenuClick = (index) => {
     setSelectedmenu(index);
   };
+
   const handleProfileClick = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
@@ -37,7 +47,11 @@ const Menu = () => {
 
   return (
     <div className="menu-container">
-      <img src="/media/images/logo (1).svg" style={{ width: "50px" }} />
+      <img
+        src="/media/images/logo (1).svg"
+        style={{ width: "50px" }}
+        alt="Logo"
+      />
       <div className="menus">
         <ul>
           <li>
@@ -109,9 +123,9 @@ const Menu = () => {
         </ul>
         <hr />
         <div className="profile">
-          <div className="avatar">ZU</div>
+          <div className="avatar">{getInitials(username)}</div>
           <p className="username" onClick={handleProfileClick}>
-            USERID
+            {username}
           </p>
         </div>
       </div>
