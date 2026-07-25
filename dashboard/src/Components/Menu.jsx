@@ -42,6 +42,14 @@ const Menu = () => {
     setIsProfileDropdownOpen(!isProfileDropdownOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("token");
+    localStorage.removeItem("email");
+
+    window.location.href = "http://localhost:5173/login";
+  };
+
   const menuClass = "menu";
   const activeMenuClass = "menu selected";
 
@@ -122,11 +130,65 @@ const Menu = () => {
           </li>
         </ul>
         <hr />
-        <div className="profile">
-          <div className="avatar">{getInitials(username)}</div>
-          <p className="username" onClick={handleProfileClick}>
-            {username}
-          </p>
+        {/* ✅ Profile Section with Dropdown Container */}
+        <div className="profile-wrapper" style={{ position: "relative" }}>
+          <div
+            className="profile"
+            onClick={handleProfileClick}
+            style={{
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <div className="avatar">{getInitials(username)}</div>
+            <p className="username">{username}</p>
+          </div>
+
+          {/* ✅ Dropdown Menu */}
+          {isProfileDropdownOpen && (
+            <div
+              className="profile-dropdown"
+              style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: "10px",
+                backgroundColor: "#fff",
+                border: "1px solid #e0e0e0",
+                borderRadius: "6px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                width: "160px",
+                zIndex: 1000,
+                overflow: "hidden",
+              }}
+            >
+              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                <li
+                  onClick={handleLogout}
+                  style={{
+                    padding: "12px 16px",
+                    cursor: "pointer",
+                    color: "#df514c",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f8f9fa")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#fff")
+                  }
+                >
+                  Logout
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
