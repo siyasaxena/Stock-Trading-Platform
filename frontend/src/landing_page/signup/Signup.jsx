@@ -24,7 +24,7 @@ function Signup() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/auth/register",
+        "https://stock-trading-backend-jut8.onrender.com/api/auth/register",
         formData,
       );
 
@@ -40,7 +40,8 @@ function Signup() {
           localStorage.setItem("token", response.data.token);
         }
 
-        window.location.href = "http://localhost:5174";
+        window.location.href =
+          "https://stock-trading-dashboard-qdnt.onrender.com";
       }, 1500);
     } catch (e) {
       setError(

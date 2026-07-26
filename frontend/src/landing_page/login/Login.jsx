@@ -21,7 +21,7 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/auth/login",
+        "https://stock-trading-backend-jut8.onrender.com/api/auth/login",
         formData,
         { withCredentials: true },
       );
@@ -44,7 +44,7 @@ function Login() {
 
       // Redirect user to dashboard after 1.5 seconds
       setTimeout(() => {
-        window.location.href = `http://localhost:5174?username=${encodeURIComponent(username)}`;
+        window.location.href = `https://stock-trading-dashboard-qdnt.onrender.com?username=${encodeURIComponent(username)}`;
       }, 1500);
     } catch (e) {
       setError(
