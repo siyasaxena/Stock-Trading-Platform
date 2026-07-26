@@ -7,7 +7,7 @@ export default defineConfig({
   esbuild: {
     // This tells Vite's loader to parse JSX syntax inside .js files
     loader: "jsx",
-    include: /src\/.*\.js$/,
+    include: /src\/.*\.jsx$/,
     exclude: [],
   },
 });
