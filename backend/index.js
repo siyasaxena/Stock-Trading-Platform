@@ -36,6 +36,7 @@ app.use(
       "http://localhost:5174",
       "http://localhost:5173",
       process.env.DASHBOARD_CLIENT_URL,
+      process.env.FRONTEND_CLIENT_URL,
     ],
     credentials: true, // 👈 Allows cookies to be sent and received cross-origin
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -221,7 +222,7 @@ app.get("/allHoldings", verifyToken, async (req, res) => {
   }
 });
 
-app.get("/allPositions", async (req, res) => {
+app.get("/allPositions", verifyToken, async (req, res) => {
   try {
     let allPositions = await PositionsModel.find({});
     res.json(allPositions);
@@ -368,7 +369,7 @@ app.get("/api/stock/:symbol", async (req, res) => {
         percentChange: response.data.dp,
       });
     } else {
-      res.status(444).json({ message: "Stock symbol not found or invalid" });
+      res.status(404).json({ message: "Stock symbol not found or invalid" });
     }
   } catch (error) {
     console.error("Finnhub Error:", error.message);
