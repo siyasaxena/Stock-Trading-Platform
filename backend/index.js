@@ -32,7 +32,11 @@ async function main() {
 
 app.use(
   cors({
-    origin: ["http://localhost:5174", "http://localhost:5173"], // React app ports (Vite/CRA)
+    origin: [
+      "http://localhost:5174",
+      "http://localhost:5173",
+      process.env.DASHBOARD_CLIENT_URL,
+    ],
     credentials: true, // 👈 Allows cookies to be sent and received cross-origin
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
