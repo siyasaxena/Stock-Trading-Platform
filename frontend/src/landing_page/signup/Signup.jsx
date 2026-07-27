@@ -104,8 +104,7 @@ function Signup() {
 
       <div className="text-center mt-3">
         <small className="text-muted">
-          Already have an account?{" "}
-          <Link to="../login/Login.jsx">Log in here</Link>
+          Already have an account? <Link to="/login">Log in here</Link>
         </small>
       </div>
     </div>
