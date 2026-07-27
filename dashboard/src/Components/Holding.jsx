@@ -1,30 +1,37 @@
-// import { holdings } from "../data/data";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { VerticalGraph } from "./VerticalChart.jsx";
+
+// Standard practice: Use environment variables with local fallback
+const API_BASE_URL = "http://localhost:8080";
 
 const Holdings = () => {
   const [allHoldings, setAllHoldings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true; // Avoid state updates on unmounted component
+
     const fetchHoldingsWithLivePrices = async () => {
       try {
-        // Step 1: Get holdings list from your backend / MongoDB
-        const res = await axios.get("http://localhost:8080/allHoldings", {
+        setLoading(true);
+        setError(null);
+
+        // Fetch DB holdings
+        const res = await axios.get(`${API_BASE_URL}/allHoldings`, {
           withCredentials: true,
         });
 
         const holdingsFromDb = res.data;
 
         if (Array.isArray(holdingsFromDb) && holdingsFromDb.length > 0) {
-          // Step 2: Fetch live prices from Finnhub for each holding in parallel
+          // Fetch live prices in parallel
           const updatedHoldings = await Promise.all(
             holdingsFromDb.map(async (stock) => {
               try {
-                // Call backend proxy route for Finnhub data
                 const finnhubRes = await axios.get(
-                  `http://localhost:8080/api/stock/${stock.name}`,
+                  `${API_BASE_URL}/api/stock/${stock.name}`,
                   { withCredentials: true },
                 );
 
@@ -32,16 +39,15 @@ const Holdings = () => {
 
                 return {
                   ...stock,
-                  // Overwrite LTP with live Finnhub price (fallback to DB price if undefined)
-                  price: liveData.currentPrice || stock.price,
-                  day: liveData.percentChange
+                  price: liveData?.currentPrice ?? stock.price,
+                  day: liveData?.percentChange
                     ? `${liveData.percentChange.toFixed(2)}%`
                     : stock.day,
-                  isLoss: liveData.change < 0,
+                  isLoss: (liveData?.change ?? 0) < 0,
                 };
               } catch (err) {
                 console.warn(
-                  `Could not fetch Finnhub price for ${stock.name}:`,
+                  `Could not fetch price for ${stock.name}:`,
                   err.message,
                 );
                 return stock; // Fallback to DB stock data on single request failure
@@ -49,49 +55,62 @@ const Holdings = () => {
             }),
           );
 
-          setAllHoldings(updatedHoldings);
+          if (isMounted) setAllHoldings(updatedHoldings);
         } else {
-          setAllHoldings([]);
+          if (isMounted) setAllHoldings([]);
         }
-      } catch (error) {
-        console.error("Failed to load holdings:", error);
+      } catch (err) {
+        console.error("Failed to load holdings:", err);
+        if (isMounted) setError("Failed to load holdings data.");
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchHoldingsWithLivePrices();
+
+    return () => {
+      isMounted = false; // Cleanup flag
+    };
   }, []);
 
-  // --- Chart & Metrics Calculations ---
-  const labels = allHoldings.map((stock) => stock.name);
+  // --- Derived Calculations (Memoized for Performance) ---
+  const { totalInvestment, currentValue, totalPnL, pnlPercent, chartData } =
+    useMemo(() => {
+      const investment = allHoldings.reduce(
+        (acc, s) => acc + (Number(s.avg) || 0) * (Number(s.qty) || 0),
+        0,
+      );
+      const current = allHoldings.reduce(
+        (acc, s) => acc + (Number(s.price) || 0) * (Number(s.qty) || 0),
+        0,
+      );
+      const pnl = current - investment;
+      const pct = investment > 0 ? (pnl / investment) * 100 : 0;
 
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "Live Market Price",
-        data: allHoldings.map((stock) => stock.price),
-        backgroundColor: "rgba(75, 192, 192, 0.6)",
-      },
-    ],
-  };
+      const chart = {
+        labels: allHoldings.map((s) => s.name),
+        datasets: [
+          {
+            label: "Live Market Price",
+            data: allHoldings.map((s) => Number(s.price) || 0),
+            backgroundColor: "rgba(75, 192, 192, 0.6)",
+          },
+        ],
+      };
 
-  const totalInvestment = allHoldings.reduce(
-    (acc, stock) => acc + (Number(stock.avg) || 0) * (Number(stock.qty) || 0),
-    0,
-  );
+      return {
+        totalInvestment: investment,
+        currentValue: current,
+        totalPnL: pnl,
+        pnlPercent: pct,
+        chartData: chart,
+      };
+    }, [allHoldings]);
 
-  const currentValue = allHoldings.reduce(
-    (acc, stock) => acc + (Number(stock.price) || 0) * (Number(stock.qty) || 0),
-    0,
-  );
-
-  const totalPnL = currentValue - totalInvestment;
-  const pnlPercent =
-    totalInvestment > 0 ? (totalPnL / totalInvestment) * 100 : 0;
-
-  if (loading) return <div>Fetching Live Finnhub Market Data...</div>;
+  if (loading)
+    return <div className="loading">Fetching Live Finnhub Market Data...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <>
@@ -126,11 +145,9 @@ const Holdings = () => {
                 const currValue = price * qty;
                 const pnl = currValue - avg * qty;
                 const isProfit = pnl >= 0;
-                const profClass = isProfit ? "profit" : "loss";
-                const dayClass = stock.isLoss ? "loss" : "profit";
 
                 return (
-                  <tr key={stock._id || index}>
+                  <tr key={stock._id || stock.name || index}>
                     <td>
                       <strong>{stock.name}</strong>
                     </td>
@@ -140,8 +157,12 @@ const Holdings = () => {
                       <strong>${price.toFixed(2)}</strong>
                     </td>
                     <td>${currValue.toFixed(2)}</td>
-                    <td className={profClass}>${pnl.toFixed(2)}</td>
-                    <td className={dayClass}>{stock.day}</td>
+                    <td className={isProfit ? "profit" : "loss"}>
+                      ${pnl.toFixed(2)}
+                    </td>
+                    <td className={stock.isLoss ? "loss" : "profit"}>
+                      {stock.day}
+                    </td>
                   </tr>
                 );
               })
@@ -169,7 +190,7 @@ const Holdings = () => {
       </div>
 
       <div style={{ marginTop: "30px" }}>
-        <VerticalGraph data={data} />
+        <VerticalGraph data={chartData} />
       </div>
     </>
   );
