@@ -60,7 +60,7 @@ app.use(
 );
 
 // Handle preflight OPTIONS requests across all routes
-app.options("*", cors());
+app.options("/(.*)", cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
