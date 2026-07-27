@@ -28,20 +28,25 @@ function Signup() {
         formData,
       );
 
-      const username = response.data.user?.username || formData.username;
-      localStorage.setItem("username", username);
+      // Extract username from response or fallback to form input
+      const registeredUsername =
+        response.data.user?.username || formData.username;
+
+      // Save locally on frontend origin
+      localStorage.setItem("username", registeredUsername);
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+      }
 
       setSuccess("Account created successfully! Redirecting...");
 
-      // Redirect user to dashboard after 1.5 seconds
+      // Redirect user to dashboard after 1.5 seconds, passing username in URL query string
       setTimeout(() => {
-        // Save token if your register endpoint returns one
-        if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
-        }
+        const dashboardUrl = `https://stock-trading-dashboard-qdnt.onrender.com?username=${encodeURIComponent(
+          registeredUsername,
+        )}`;
 
-        window.location.href =
-          "https://stock-trading-dashboard-qdnt.onrender.com";
+        window.location.href = dashboardUrl;
       }, 1500);
     } catch (e) {
       setError(
