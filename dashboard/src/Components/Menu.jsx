@@ -1,33 +1,37 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Menu = () => {
   const [selectedMenu, setSelectedmenu] = useState(0);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [username, setUsername] = useState("USERID");
+  const location = useLocation(); // Re-runs effect when route changes
 
   useEffect(() => {
-    // 1. Read ?username=siya%20saxena directly from URL search params
+    // 1. Check URL query parameters (accepting username, name, or userid)
     const queryParams = new URLSearchParams(window.location.search);
-    const userFromUrl = queryParams.get("username");
+    const userFromUrl =
+      queryParams.get("username") ||
+      queryParams.get("name") ||
+      queryParams.get("userid");
 
-    if (userFromUrl) {
-      setUsername(userFromUrl);
-      // Save it locally on port 5174 so it persists on page refreshes
-      localStorage.setItem("username", userFromUrl);
+    if (userFromUrl && userFromUrl.trim() !== "") {
+      const decodedUser = decodeURIComponent(userFromUrl);
+      setUsername(decodedUser);
+      localStorage.setItem("username", decodedUser);
     } else {
-      // 2. Fallback to port 5174's local storage on refresh
+      // 2. Fallback to localStorage
       const savedUser = localStorage.getItem("username");
-      if (savedUser) {
+      if (savedUser && savedUser.trim() !== "") {
         setUsername(savedUser);
       }
     }
-  }, []);
+  }, [location.search]);
 
-  // Extract initials (e.g., "siya saxena" -> "SS")
+  // Extract initials (e.g., "siya saxena" -> "SS", "siya" -> "SI")
   const getInitials = (name) => {
     if (!name || name === "USERID") return "ZU";
-    const parts = name.trim().split(" ");
+    const parts = name.trim().split(" ").filter(Boolean);
     if (parts.length >= 2) {
       return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
     }
@@ -47,7 +51,7 @@ const Menu = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("email");
 
-    window.location.href = "http://localhost:5173/login";
+    window.location.href = "https://stock-trading-frontend-so2m.onrender.com";
   };
 
   const menuClass = "menu";
@@ -130,7 +134,7 @@ const Menu = () => {
           </li>
         </ul>
         <hr />
-        {/* ✅ Profile Section with Dropdown Container */}
+        {/* Profile Section with Dropdown Container */}
         <div className="profile-wrapper" style={{ position: "relative" }}>
           <div
             className="profile"
@@ -146,7 +150,7 @@ const Menu = () => {
             <p className="username">{username}</p>
           </div>
 
-          {/* ✅ Dropdown Menu */}
+          {/* Dropdown Menu */}
           {isProfileDropdownOpen && (
             <div
               className="profile-dropdown"
